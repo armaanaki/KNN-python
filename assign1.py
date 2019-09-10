@@ -20,7 +20,7 @@ import argparse
 # data_set: array of data to test against the compare_set (what our program will try to predict), defaults to null array if none is set
 # split_amount: the fraction that our data will split into (how much of the data set goes into each array), defaults to 80% if none is set
 # filename: File location of dataset to load, defaults to the iris data set if none is set
-def load_data(compare_set = [], data_set = [], split_amount = 0.8, filename = "iris.data"):
+def load_data(compare_set, data_set, split_amount, filename):
     # open the file in read-only as a csv
     with open(filename, 'r') as csvfile:
         # load the csv into a list
@@ -84,7 +84,7 @@ def guess_type(compare_set, data_point, k):
     return sorted(type_votes.iteritems(), key=lambda x:int(x[1]))[-1][0]
 
 # main function that holds the logic for printing guesses and accuracy
-def main():
+def main(k, filename, split):
     # variables used throughout function
     compare_set = []
     data_set = []
@@ -92,11 +92,11 @@ def main():
     incorrect = 0
 
     # load data into our variables
-    load_data(compare_set, data_set)
+    load_data(compare_set, data_set, split, filename)
 
     # iterate through each point in the data set and make a guess
     for data_point in data_set:
-        point_guess = guess_type(compare_set, data_point , 3)
+        point_guess = guess_type(compare_set, data_point , k)
         print("Point: " + str(data_point) + "\tGuess: " + point_guess)
         if point_guess == data_point[-1]:
             correct += 1
@@ -110,4 +110,38 @@ def main():
     print("Accuracy: " + str(round(float(correct)/(correct+incorrect) * 100, 2)) + "%")
 
 
-main()
+# parser arguments to make running the program easier
+parser = argparse.ArgumentParser()
+parser.add_argument("-k", "--kvalue", help="the value you wish to set k to (defaults to 3)")
+parser.add_argument("-f", "--filename", help="the location of the data file (defaults to iris.data)")
+parser.add_argument("-s", "--split", help="the amount of the dataset to be split into training data (the rest is used as guessing points, defaults to 0.8)")
+args = parser.parse_args()
+
+# use k if k was provided, if less than 1 exit
+if args.kvalue:
+    k = int(args.kvalue)
+    if k < 1:
+        print("k value may not be less than 1!")
+        exit(1)
+else:
+    k = 3
+
+# use filename if filename was provided
+if args.filename:
+    filename = args.filename
+else:
+    filename = "iris.data"
+
+# use split if split was provided, exit if it does not fall between 1 and 0
+if args.split:
+    split = float(args.split)
+    if split <= 0:
+        print("split may not be 0 or less!")
+        exit(1)
+    if split >= 1:
+        print("split may not be 1 or more!")
+        exit(1)
+else:
+    split = 0.8
+
+main(k, filename, split)
